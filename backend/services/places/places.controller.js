@@ -1,4 +1,4 @@
-const Place = require("./place.model");
+const Place = require("./places.model");
 const jwt = require("jsonwebtoken");
 const { jwtSecret } = require("../../config/util");
 

@@ -5,7 +5,7 @@ const {
   updateUserPlace,
   getPlaceByID,
   getAllPlaces,
-} = require("./place.controller");
+} = require("./places.controller");
 
 const publicPlaceRouter = express.Router();
 const verifiedPlaceRouter = express.Router();
