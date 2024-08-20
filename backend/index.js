@@ -1,10 +1,17 @@
 const express = require("express");
 
 const bookingRouter = require("./services/bookings/bookings.routes");
+const {
+  createUserPlace,
+  getUserPlaces,
+  updateUserPlace,
+  getPlaceByID,
+  getAllPlaces,
+} = require("./services/places/place.controller");
+
 // DB Model
 const mongoose = require("mongoose");
 const User = require("./models/User");
-const Place = require("./models/Place");
 
 // Security Stuffs
 const bcrypt = require("bcryptjs");
@@ -16,6 +23,10 @@ const cookieParser = require("cookie-parser");
 const download = require("image-downloader");
 const multer = require("multer");
 const fs = require("fs");
+const {
+  verifiedPlaceRouter,
+  publicPlaceRouter,
+} = require("./services/places/place.routes");
 // Starting app
 const app = express();
 
@@ -126,93 +137,9 @@ app.post("/upload", photosMiddleware.array("photos", 100), (req, res) => {
   res.json(uploadedFiles);
 });
 
-app.post("/user-places", (req, res) => {
-  const { token } = req.cookies;
-  const {
-    title,
-    address,
-    addedPhotos,
-    description,
-    perks,
-    extraInfo,
-    checkIn,
-    checkOut,
-    maxGuests,
-    price,
-  } = req.body;
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) throw err;
-    const placeDoc = await Place.create({
-      owner: userData.id,
-      title,
-      address,
-      photos: addedPhotos,
-      description,
-      perks,
-      extraInfo,
-      checkIn,
-      checkOut,
-      maxGuests,
-      price,
-    });
-    res.json(placeDoc);
-  });
-});
+app.use("/user-places", verifiedPlaceRouter);
 
-app.get("/user-places", (req, res) => {
-  const { token } = req.cookies;
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) throw err;
-    const { id } = userData;
-    res.json(await Place.find({ owner: id }));
-  });
-});
-
-app.put("/user-places", async (req, res) => {
-  const { token } = req.cookies;
-  const {
-    id,
-    title,
-    address,
-    addedPhotos,
-    description,
-    perks,
-    extraInfo,
-    checkIn,
-    checkOut,
-    maxGuests,
-    price,
-  } = req.body;
-  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) throw err;
-    const placeDoc = await Place.findById(id);
-    if (userData.id === placeDoc.owner.toString()) {
-      placeDoc.set({
-        title,
-        address,
-        photos: addedPhotos,
-        description,
-        perks,
-        extraInfo,
-        checkIn,
-        checkOut,
-        maxGuests,
-        price,
-      });
-      await placeDoc.save();
-    }
-    res.json("ok");
-  });
-});
-
-app.get("/places/:id", async (req, res) => {
-  const { id } = req.params;
-  res.json(await Place.findById(id));
-});
-
-app.get("/places", async (req, res) => {
-  res.json(await Place.find());
-});
+app.use("/places", publicPlaceRouter);
 
 app.use("/bookings", bookingRouter);
 
