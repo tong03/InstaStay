@@ -1,9 +1,11 @@
 const express = require("express");
+
+const bookingRouter = require("./services/bookings/bookings.routes");
 // DB Model
 const mongoose = require("mongoose");
 const User = require("./models/User");
 const Place = require("./models/Place");
-const Booking = require("./models/Booking");
+
 // Security Stuffs
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -212,45 +214,7 @@ app.get("/places", async (req, res) => {
   res.json(await Place.find());
 });
 
-app.post("/bookings", async (req, res) => {
-  const userData = await getUserDataFromReq(req);
-  const { place, checkIn, checkOut, numberOfGuests, name, phone, price } =
-    req.body;
-  Booking.create({
-    place,
-    checkIn,
-    checkOut,
-    numberOfGuests,
-    name,
-    phone,
-    price,
-    user: userData.id,
-  })
-    .then((doc) => {
-      res.json(doc);
-    })
-    .catch((err) => {
-      throw err;
-    });
-});
-
-app.get("/bookings", async (req, res) => {
-  const userData = await getUserDataFromReq(req);
-  res.json(await Booking.find({ user: userData.id }).populate("place"));
-});
-
-app.delete("/bookings/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await Booking.deleteOne({ _id: id });
-    if (result.deletedCount == 0) {
-      return res.status(404).json({ message: "Booking not found!" });
-    }
-    res.status(200).json({ message: "Booking cancelled successfully." });
-  } catch (error) {
-    res.status(500).json({ message: "An error occurred while cancelling." });
-  }
-});
+app.use("/bookings", bookingRouter);
 
 app.listen(4000);
 
